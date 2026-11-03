@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F1, explained</title>
+<meta name="description" content="Live Formula 1 standings, results and the next race, in plain English.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏁</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Newsreader:opsz,wght@6..72,400;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecef;--panel:#f6f8f9;--ink:#12161c;--mute:#5b6570;--line:#cdd4da;--red:#d8261c;--bar:#12161c;--up:#0f7b3f;--down:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#10141a;--panel:#181d25;--ink:#eef1f4;--mute:#97a1ac;--line:#2b333d;--red:#ff4a3d;--bar:#eef1f4;--up:#4cd18a;--down:#ff7a70}}
+*{box-sizing:border-box}
+html{scroll-padding-top:1rem}
+body{margin:0;background:var(--bg);color:var(--ink);font:1.0625rem/1.6 Newsreader,Georgia,serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.kerb{height:14px;background:repeating-linear-gradient(90deg,var(--red) 0 28px,#fff 28px 56px)}
+main{max-width:860px;margin:0 auto;padding:0 1.25rem 4rem}
+h1,h2,h3,.sans{font-family:Archivo,"Helvetica Neue",Arial,sans-serif}
+h1{font-size:clamp(2.6rem,9vw,4.8rem);font-weight:900;font-stretch:75%;letter-spacing:-.02em;line-height:.95;margin:2rem 0 .6rem}
+.lede{max-width:34rem;color:var(--mute);margin:0 0 2rem}
+h2{font-size:1.5rem;font-weight:800;font-stretch:90%;margin:3rem 0 .4rem}
+.sub{color:var(--mute);margin:0 0 1rem;max-width:36rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1.25rem}
+#next .name{font-family:Archivo,sans-serif;font-weight:800;font-stretch:80%;font-size:clamp(1.8rem,6vw,2.8rem);line-height:1.05;margin:0}
+#next .where{color:var(--mute);margin:.2rem 0 1rem}
+.count{display:flex;gap:1.2rem;font-family:Archivo,sans-serif;font-variant-numeric:tabular-nums;margin-bottom:1.2rem}
+.count b{display:block;font-size:2.4rem;font-weight:800;font-stretch:80%;line-height:1}
+.count span{font-size:.8rem;color:var(--mute)}
+.sess{display:grid;grid-template-columns:7.5rem 1fr;gap:.2rem 1rem;border-top:1px solid var(--line);padding:.6rem 0;font-size:.98rem}
+.sess .t{font-family:Archivo,sans-serif;font-weight:600;font-size:.9rem;color:var(--mute)}
+.sess strong{font-family:Archivo,sans-serif;font-weight:700}
+.sess.race strong{color:var(--red)}
+.tabs{display:flex;gap:.4rem;margin:.6rem 0 1rem}
+.tabs button{font:600 .95rem Archivo,sans-serif;padding:.5rem 1rem;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.say{border-left:4px solid var(--red);padding:.2rem 0 .2rem 1rem;margin:0 0 1.2rem;max-width:38rem}
+.row{display:grid;grid-template-columns:2rem 1fr auto;gap:0 .8rem;align-items:baseline;padding:.55rem 0;border-top:1px solid var(--line)}
+.row .p{font:700 1rem Archivo,sans-serif;color:var(--mute);font-variant-numeric:tabular-nums}
+.row .n{font:700 1.02rem Archivo,sans-serif}
+.row .n small{font:400 .9rem Newsreader,serif;color:var(--mute);margin-left:.5rem}
+.row .pts{font:800 1.1rem Archivo,sans-serif;font-variant-numeric:tabular-nums;text-align:right}
+.row .pts small{display:block;font:500 .78rem Archivo,sans-serif;color:var(--mute)}
+.bar{grid-column:2/4;height:6px;border-radius:3px;background:var(--line);margin-top:.35rem;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--bar);border-radius:3px}
+.row.lead .bar i{background:var(--red)}
+.row.out{opacity:.55}
+.res{display:grid;grid-template-columns:2rem 1fr auto 3.2rem;gap:.8rem;align-items:baseline;padding:.5rem 0;border-top:1px solid var(--line)}
+.res .g{font:700 .9rem Archivo,sans-serif;text-align:right;font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.down{color:var(--down)}.flat{color:var(--mute)}
+.res .tm{font:500 .9rem Archivo,sans-serif;color:var(--mute);font-variant-numeric:tabular-nums}
+.note{font-size:.9rem;color:var(--mute);margin-top:.8rem}
+details{border-top:1px solid var(--line);padding:.9rem 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{font:700 1.08rem Archivo,sans-serif;cursor:pointer}
+details p{margin:.6rem 0 0;max-width:38rem}
+.flags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.7rem}
+.flags span{font:600 .85rem Archivo,sans-serif;padding:.25rem .6rem;border-radius:4px;border:1px solid var(--line)}
+.err{color:var(--down)}
+footer{margin-top:3rem;color:var(--mute);font-size:.9rem}
+footer a{color:inherit}
+@media (prefers-reduced-motion:no-preference){.live{animation:p 2s ease-in-out infinite}@keyframes p{50%{opacity:.35}}}
+.live{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:var(--red);margin-right:.4rem}
+</style>
+</head>
+<body>
+<div class="kerb"></div>
+<main>
+  <h1>F1, explained.</h1>
+  <p class="lede">Twenty-two drivers, eleven teams, one season. Here is who is winning, what happened last time, and what is on next. No jargon needed.</p>
+
+  <section id="next" class="panel" aria-live="polite"><p>Loading the next race…</p></section>
+
+  <h2>Who is winning the title?</h2>
+  <p class="sub">Every race hands out points. Whoever has the most points at the end of the season is champion.</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-drivers" aria-selected="true">Drivers</button>
+    <button role="tab" id="t-teams" aria-selected="false">Teams</button>
+  </div>
+  <div id="stand"><p>Loading standings…</p></div>
+
+  <h2>Last race</h2>
+  <p class="sub" id="lastsub">Loading…</p>
+  <div id="last"></div>
+
+  <h2>New here? Start here.</h2>
+  <p class="sub">Tap any question.</p>
+  <div id="learn">
+    <details><summary>What is Formula 1, in one paragraph?</summary><p>Teams build the fastest cars the rules allow, and two drivers per team race them around the world on about 24 weekends a year. There are two championships: one for drivers and one for teams (called constructors). Cars are single-seaters with open wheels, and they can reach over 340 km/h.</p></details>
+    <details><summary>What happens on a race weekend?</summary><p>Friday is practice: teams test the car. Saturday has qualifying, a time-trial session that decides who starts at the front. Sunday is the race, usually about 300 km. Some weekends swap in a shorter “sprint” race on Saturday for extra points.</p></details>
+    <details><summary>How do points work?</summary><p>The top ten finishers score in the Grand Prix: 25, 18, 15, 12, 10, 8, 6, 4, 2, 1. A sprint race pays the top eight: 8, 7, 6, 5, 4, 3, 2, 1. A team’s score is its two drivers’ points added together.</p></details>
+    <details><summary>Why does starting position matter so much?</summary><p>Cars follow each other closely, and the car behind loses grip in the “dirty air” of the car ahead. That makes passing hard, so a good qualifying lap often decides the race. The green and red numbers in the results below show how many places a driver gained or lost from the start.</p></details>
+    <details><summary>Why do they stop in the middle of the race?</summary><p>Pit stops. Tyres wear out, and a crew changes all four in about two seconds. Teams pick softer tyres (fast, wear quickly) or harder ones (slower, last longer), and the race is a puzzle of when to stop.</p></details>
+    <details><summary>What is a safety car?</summary><p>If there is a crash or debris, a safety car leads the pack at slow speed while marshals clear the track. It bunches everyone up, wipes out big leads, and often shakes up the result.</p></details>
+    <details><summary>What do the flags mean?</summary>
+      <p>Marshals use flags to talk to drivers.</p>
+      <div class="flags"><span>Green: track is clear</span><span>Yellow: danger, slow down, no passing</span><span>Red: race stopped</span><span>Blue: faster car is behind, let it by</span><span>Chequered: race is over</span></div></details>
+    <details><summary>What are the cars doing when they pass?</summary><p>Drivers get help on the straights, such as extra electric power or flaps that cut drag. The exact system changes with the rules, and the 2026 cars use new power units and active aerodynamics, so the details are different from a few years ago. The idea is the same: make passing possible without making it easy.</p></details>
+    <details><summary>What is a penalty?</summary><p>Stewards punish rule-breaking. Common ones are time added to a driver’s race time, losing grid places, or a drive-through through the pit lane. A driver can finish first on the road and still lose the win if a penalty drops them down the order.</p></details>
+  </div>
+
+  <footer>
+    <p><span class="live"></span><span id="stamp">Waiting for data…</span> This page checks for new data every minute. Times are shown in your local time zone.</p>
+    <p>Data from <a href="https://openf1.org" rel="noopener">OpenF1</a>. This is an unofficial fan project and is not affiliated with Formula 1.</p>
+  </footer>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const get=async()=>{throw new Error('data.json not found yet')};
+const S={view:'drivers',races:[],drivers:[],teams:[],round:0,nextRace:null};
+const SESS=[['FirstPractice','Practice 1','Teams test the car and tyres.'],['SecondPractice','Practice 2','More testing, usually a race-pace run.'],['ThirdPractice','Practice 3','Final tune-up before qualifying.'],['SprintQualifying','Sprint qualifying','Sets the grid for the short sprint race.'],['SprintShootout','Sprint qualifying','Sets the grid for the short sprint race.'],['Sprint','Sprint race','A short race (about 100 km). Top 8 score points.'],['Qualifying','Qualifying','Fastest lap wins pole, the best starting spot.']];
+const when=(d,t)=>new Date(d+'T'+(t||'12:00:00Z'));
+const fmt=dt=>dt.toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+
+function renderNext(){
+  const el=$('#next'),r=S.nextRace;
+  if(!r){el.innerHTML='<h3 class="name">Season complete</h3><p class="where">That is every race for this year. Standings below are final.</p>';return}
+  const rows=SESS.filter(s=>r[s[0]]).map(s=>({k:s[1],d:s[2],t:when(r[s[0]].date,r[s[0]].time)}));
+  rows.push({k:'Race',d:'The main event, about 300 km. Most points are won here.',t:when(r.date,r.time),race:1});
+  rows.sort((a,b)=>a.t-b.t);
+  el.innerHTML=`<p class="where sans" style="margin:0 0 .3rem">Next up · Round ${esc(r.round)}</p>
+  <h3 class="name">${esc(r.raceName)}</h3>
+  <p class="where">${esc(r.Circuit.circuitName)}, ${esc(r.Circuit.Location.locality)}, ${esc(r.Circuit.Location.country)}</p>
+  <div class="count" id="count" aria-label="Time until the race"></div>
+  ${rows.map(x=>`<div class="sess${x.race?' race':''}"><span class="t">${fmt(x.t)}</span><span><strong>${esc(x.k)}.</strong> ${esc(x.d)}</span></div>`).join('')}`;
+  tick();
+}
+function tick(){
+  const r=S.nextRace,c=$('#count');if(!r||!c)return;
+  let ms=when(r.date,r.time)-Date.now();
+  if(ms<=0){c.innerHTML='<b>Race weekend is live</b>';return}
+  const s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60;
+  c.innerHTML=[[d,'days'],[h,'hours'],[m,'mins'],[x,'secs']].map(a=>`<div><b>${String(a[0]).padStart(2,'0')}</b><span>${a[1]}</span></div>`).join('');
+}
+function remaining(perGP,perSprint){
+  return S.races.filter(r=>+r.round>S.round).reduce((t,r)=>t+perGP+(r.Sprint?perSprint:0),0);
+}
+function renderStand(){
+  const isD=S.view==='drivers',L=isD?S.drivers:S.teams,el=$('#stand');
+  if(!L.length){el.innerHTML='<p>Standings will appear once the first race is done.</p>';return}
+  const top=+L[0].points,left=isD?remaining(25,8):remaining(44,15);
+  const alive=L.filter(x=>+x.points+left>=top).length;
+  const gap=L[1]?top-L[1].points:0;
+  const nm=x=>isD?x.Driver.givenName+' '+x.Driver.familyName:x.Constructor.name;
+  let say=`<strong>${esc(nm(L[0]))}</strong> leads${L[1]?` by ${gap} point${gap==1?'':'s'} over ${esc(nm(L[1]))}`:''}. `;
+  say+=left===0?'The season is over, so this is the final result.':alive===1?'Nobody else can catch them now, the title is decided.':`With ${left} points still on offer, ${alive} ${isD?'drivers':'teams'} can still win the title.`;
+  el.innerHTML=`<p class="say">${say}</p>`+L.map((x,i)=>{
+    const pts=+x.points,g=top-pts,out=pts+left<top;
+    return `<div class="row${i==0?' lead':''}${out?' out':''}"><span class="p">${esc(x.position)}</span>
+    <span class="n">${esc(nm(x))}${isD?`<small>${esc(x.Constructors?.[0]?.name||'')}</small>`:''}</span>
+    <span class="pts">${pts}<small>${i==0?'leader':'−'+g}</small></span>
+    <span class="bar"><i style="width:${top?pts/top*100:0}%"></i></span></div>`}).join('')+
+    `<p class="note">Faded rows can no longer win the title, even with a perfect finish to the season.</p>`;
+}
+function renderLast(race){
+  const sub=$('#lastsub'),el=$('#last');
+  if(!race){sub.textContent='No races have been run yet this season.';el.innerHTML='';return}
+  sub.textContent=`${race.raceName}, round ${race.round}. Green means gained places from the start, red means lost.`;
+  el.innerHTML=race.Results.slice(0,10).map(r=>{
+    const grid=+r.grid||20,pos=+r.position,d=grid-pos;
+    const cls=d>0?'up':d<0?'down':'flat',txt=d>0?'▲'+d:d<0?'▼'+(-d):'–';
+    return `<div class="res"><span class="p sans" style="font-weight:700;color:var(--mute)">${esc(r.position)}</span>
+    <span class="n sans" style="font-weight:700">${esc(r.Driver.givenName)} ${esc(r.Driver.familyName)}<small style="font:400 .9rem Newsreader,serif;color:var(--mute);margin-left:.5rem">${esc(r.Constructor.name)}</small></span>
+    <span class="tm">${esc(r.Time?.time||r.status)}</span><span class="g ${cls}" title="Started P${r.grid||'pit lane'}">${txt}</span></div>`}).join('')+
+    `<p class="note">Full results: ${race.Results.length} cars started. Only the top ten score points.</p>`;
+}
+let SNAP=null;
+async function snap(){try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;return await r.json()}catch(e){return null}}
+const pick=(k,p)=>SNAP&&SNAP[k]?Promise.resolve(SNAP[k]):get(p);
+async function load(){
+  SNAP=await snap();
+  const [sch,ds,cs,last]=await Promise.allSettled([pick('races','/races'),pick('ds','/driverstandings'),pick('cs','/constructorstandings'),pick('last','/last/results')]);
+  if(sch.status==='fulfilled'){
+    S.races=sch.value.RaceTable.Races;
+    S.nextRace=S.races.find(r=>when(r.date,r.time).getTime()+3*3600e3>Date.now())||null;
+    renderNext();
+  }else if(!S.races.length){$('#next').innerHTML='<p class="err">Could not load the race calendar ('+esc(sch.reason&&sch.reason.message)+'). Retrying in a minute.</p>'}
+  if(ds.status==='fulfilled'){const l=ds.value.StandingsTable.StandingsLists[0];if(l){S.drivers=l.DriverStandings;S.round=+l.round}}
+  if(cs.status==='fulfilled'){const l=cs.value.StandingsTable.StandingsLists[0];if(l)S.teams=l.ConstructorStandings}
+  if(ds.status==='fulfilled'||cs.status==='fulfilled')renderStand();
+  else if(!S.drivers.length)$('#stand').innerHTML='<p class="err">Could not load standings ('+esc(ds.reason&&ds.reason.message)+'). Retrying in a minute.</p>';
+  if(last.status==='fulfilled')renderLast(last.value.RaceTable.Races[0]);
+  else if(!$('#last').innerHTML){$('#lastsub').innerHTML='<span class="err">Could not load the last race. Retrying in a minute.</span>'}
+  if([sch,ds,cs,last].some(x=>x.status==='fulfilled'))$('#stamp').textContent='Updated '+new Date().toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',second:'2-digit'})+'.';
+}
+for(const [id,v] of [['t-drivers','drivers'],['t-teams','teams']])$('#'+id).onclick=()=>{S.view=v;$('#t-drivers').setAttribute('aria-selected',v==='drivers');$('#t-teams').setAttribute('aria-selected',v==='teams');renderStand()};
+load();setInterval(load,60000);setInterval(tick,1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+</script>
+</body>
+</html>

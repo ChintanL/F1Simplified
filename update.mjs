@@ -11,6 +11,7 @@ async function getJSON(url, tries = 4) {
     try {
       const r = await fetch(url, { headers: { 'User-Agent': UA } });
       if (r.ok) return await r.json();
+      if (r.status === 404) return []; // OpenF1 answers 404 when a query has no matching rows
       err = new Error(`${r.status} for ${url}`);
     } catch (e) { err = e; }
     await sleep(GAP * (i + 1));
@@ -47,6 +48,7 @@ async function openf1() {
       round: String(races.length + 1), raceName: m.meeting_name, ...dt(race.date_start),
       Circuit: { circuitName: m.circuit_short_name, Location: { locality: m.location, country: m.country_name } },
       _raceKey: race.session_key, _end: race.date_end,
+      _qualiKey: ss.find(s => s.session_name === 'Qualifying')?.session_key,
     };
     ss.forEach(s => { const k = SESSION_KEYS[s.session_name]; if (k) o[k] = dt(s.date_start); });
     races.push(o);
@@ -55,7 +57,7 @@ async function openf1() {
 
   const done = races.filter(r => new Date(r._end) < new Date());
   const lastRace = done[done.length - 1];
-  const clean = r => { const { _raceKey, _end, ...rest } = r; return rest; };
+  const clean = r => { const { _raceKey, _end, _qualiKey, ...rest } = r; return rest; };
   const out = {
     races: { RaceTable: { Races: races.map(clean) } },
     ds: { StandingsTable: { StandingsLists: [] } },
@@ -74,7 +76,8 @@ async function openf1() {
     if (cd.length) break;
   }
   const res = await g(`/session_result?session_key=${k}`);
-  const grid = await g(`/starting_grid?session_key=${k}`);
+  let grid = await g(`/starting_grid?session_key=${k}`);
+  if (!grid.length && lastRace._qualiKey) grid = await g(`/session_result?session_key=${lastRace._qualiKey}`); // qualifying order as a stand-in
 
   const dv = Object.fromEntries(drivers.map(d => [d.driver_number, d]));
   const nameOf = n => ({ givenName: dv[n]?.first_name || '', familyName: dv[n]?.last_name || `#${n}` });
@@ -104,7 +107,7 @@ async function openf1() {
       const gap = r.gap_to_leader;
       const time = (r.position === 1 ? fmtT(dur) : typeof gap === 'number' ? `+${gap.toFixed(3)}s` : (gap || null));
       return {
-        position: String(r.position ?? i + 1), grid: String(gridOf[r.driver_number] ?? 0), points: String(r.points ?? 0),
+        position: String(r.position ?? i + 1), grid: String(gridOf[r.driver_number] ?? r.position ?? i + 1), points: String(r.points ?? 0),
         Driver: nameOf(r.driver_number), Constructor: { name: teamOf(r.driver_number) },
         ...(time && !r.dnf && !r.dns && !r.dsq ? { Time: { time } } : {}), status,
       };

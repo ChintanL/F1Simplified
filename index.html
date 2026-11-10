@@ -16,7 +16,7 @@
 html{scroll-padding-top:1rem}
 body{margin:0;background:var(--bg);color:var(--ink);font:1.0625rem/1.6 Newsreader,Georgia,serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
 .kerb{height:14px;background:repeating-linear-gradient(90deg,var(--red) 0 28px,#fff 28px 56px)}
-main{max-width:860px;margin:0 auto;padding:0 1.25rem 4rem}
+main{max-width:860px;margin:0 auto;padding:0 1.25rem 6rem}
 h1,h2,h3,.sans{font-family:Archivo,"Helvetica Neue",Arial,sans-serif}
 h1{font-size:clamp(2.6rem,9vw,4.8rem);font-weight:900;font-stretch:75%;letter-spacing:-.02em;line-height:.95;margin:2rem 0 .6rem}
 .lede{max-width:34rem;color:var(--mute);margin:0 0 2rem}
@@ -64,6 +64,35 @@ footer{margin-top:3rem;color:var(--mute);font-size:.9rem}
 footer a{color:inherit}
 @media (prefers-reduced-motion:no-preference){.live{animation:p 2s ease-in-out infinite}@keyframes p{50%{opacity:.35}}}
 .live{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:var(--red);margin-right:.4rem}
+
+.lk{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;text-align:left}
+.lk:hover{color:var(--red)}
+.lk:focus-visible{outline:3px solid var(--red);outline-offset:2px;border-radius:2px}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s;z-index:40}
+#scrim.open{opacity:1;visibility:visible;transition:opacity .25s}
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(390px,100vw);background:var(--panel);border-left:1px solid var(--line);z-index:50;overflow-y:auto;padding:1.25rem 1.5rem 2rem;padding-top:calc(1.25rem + env(safe-area-inset-top,0px));transform:translateX(100%);visibility:hidden;transition:transform .28s ease,visibility 0s .28s}
+#panel.open{transform:none;visibility:visible;transition:transform .28s ease}
+#close{position:absolute;top:calc(.6rem + env(safe-area-inset-top,0px));right:.8rem;width:2.4rem;height:2.4rem;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 1.3rem/1 Archivo,sans-serif;cursor:pointer;z-index:2}
+#panel h3{font:800 1.9rem/1.05 Archivo,sans-serif;font-stretch:80%;margin:1rem 0 .2rem}
+#panel .tm{margin:0 0 1rem;color:var(--mute)}
+.ph{position:relative;height:250px;border-radius:6px;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 85%,#000),color-mix(in srgb,var(--tc) 40%,var(--panel)))}
+.ph img{position:absolute;inset:auto 0 0 0;margin:0 auto;height:100%;max-width:100%;object-fit:contain;object-position:bottom}
+.ph .ini{position:absolute;inset:0;display:grid;place-items:center;font:900 5rem Archivo,sans-serif;color:rgba(255,255,255,.55)}
+.ph .num{position:absolute;top:.6rem;left:.8rem;font:900 2.4rem/1 Archivo,sans-serif;font-stretch:75%;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.35)}
+.car{padding:1.5rem 0 .5rem;border-radius:6px;background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 22%,var(--panel)),var(--panel));border:1px solid var(--line)}
+.car svg{width:100%;display:block}
+#panel dl{margin:1rem 0 0}
+#panel dl div{display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;border-top:1px solid var(--line)}
+#panel dt{color:var(--mute);font:500 .9rem Archivo,sans-serif}
+#panel dd{margin:0;font:700 1rem Archivo,sans-serif;text-align:right}
+body.pop{overflow:hidden}
+#road{position:fixed;left:0;right:0;bottom:0;height:62px;pointer-events:none;opacity:0;transition:opacity .35s;z-index:30;background:linear-gradient(transparent,var(--bg) 85%)}
+#road.on{opacity:1}
+#road::after{content:"";position:absolute;left:0;right:0;bottom:9px;border-top:2px dashed var(--line)}
+#car{position:absolute;left:0;bottom:7px;width:116px;will-change:transform}
+#car svg{width:100%;display:block}
+.wh{transform-box:fill-box;transform-origin:center;transform:rotate(var(--rot,0deg))}
+@media print{#road,#panel,#scrim{display:none}}
 </style>
 </head>
 <body>
@@ -75,7 +104,7 @@ footer a{color:inherit}
   <section id="next" class="panel" aria-live="polite"><p>Loading the next race…</p></section>
 
   <h2>Who is winning the title?</h2>
-  <p class="sub">Every race hands out points. Whoever has the most points at the end of the season is champion.</p>
+  <p class="sub">Every race hands out points. Whoever has the most points at the end of the season is champion. Tap any driver or team name for details.</p>
   <div class="tabs" role="tablist">
     <button role="tab" id="t-drivers" aria-selected="true">Drivers</button>
     <button role="tab" id="t-teams" aria-selected="false">Teams</button>
@@ -107,12 +136,15 @@ footer a{color:inherit}
     <p>Data from <a href="https://openf1.org" rel="noopener">OpenF1</a>. This is an unofficial fan project and is not affiliated with Formula 1.</p>
   </footer>
 </main>
+<div id="road" aria-hidden="true"><div id="car"></div></div>
+<div id="scrim"></div>
+<aside id="panel" role="dialog" aria-modal="true" aria-label="Details" aria-hidden="true" tabindex="-1"><button id="close" aria-label="Close details">×</button><div id="pbody"></div></aside>
 
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const get=async()=>{throw new Error('data.json not found yet')};
-const S={all:{drivers:false,teams:false},view:'drivers',races:[],drivers:[],teams:[],round:0,nextRace:null};
+const S={profiles:{},all:{drivers:false,teams:false},view:'drivers',races:[],drivers:[],teams:[],round:0,nextRace:null};
 const SESS=[['FirstPractice','Practice 1','Teams test the car and tyres.'],['SecondPractice','Practice 2','More testing, usually a race-pace run.'],['ThirdPractice','Practice 3','Final tune-up before qualifying.'],['SprintQualifying','Sprint qualifying','Sets the grid for the short sprint race.'],['SprintShootout','Sprint qualifying','Sets the grid for the short sprint race.'],['Sprint','Sprint race','A short race (about 100 km). Top 8 score points.'],['Qualifying','Qualifying','Fastest lap wins pole, the best starting spot.']];
 const when=(d,t)=>new Date(d+'T'+(t||'12:00:00Z'));
 const fmt=dt=>dt.toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
@@ -162,7 +194,7 @@ function renderStand(){
   el.innerHTML=`<p class="say">${say}</p>`+shown.map((x,i)=>{
     const pts=+x.points,g=top-pts,out=pts+left<top;
     return `<div class="row${i==0?' lead':''}${out?' out':''}"><span class="p">${esc(x.position)}</span>
-    <span class="n">${esc(nm(x))}${isD?`<small>${esc(x.Constructors?.[0]?.name||'')}</small>`:''}</span>
+    <span class="n"><button class="lk" ${isD?'data-d':'data-t'}="${esc(nm(x))}">${esc(nm(x))}</button>${isD?`<small><button class="lk" data-t="${esc(x.Constructors?.[0]?.name||'')}">${esc(x.Constructors?.[0]?.name||'')}</button></small>`:''}</span>
     <span class="pts">${pts}<small>${i==0?'leader':'−'+g}</small></span>
     <span class="bar"><i style="width:${top?pts/top*100:0}%"></i></span></div>`}).join('')+
     (L.length>10?`<button class="more" id="more">${full?'Show top 10 only':'Show all '+L.length}</button>`:'')+
@@ -178,7 +210,7 @@ function renderLast(race){
     const grid=+r.grid||20,pos=+r.position,d=grid-pos;
     const cls=d>0?'up':d<0?'down':'flat',txt=d>0?'▲'+d:d<0?'▼'+(-d):'–';
     return `<div class="res"><span class="p sans" style="font-weight:700;color:var(--mute)">${esc(r.position)}</span>
-    <span class="n sans" style="font-weight:700">${esc(r.Driver.givenName)} ${esc(r.Driver.familyName)}<small style="font:400 .9rem Newsreader,serif;color:var(--mute);margin-left:.5rem">${esc(r.Constructor.name)}</small></span>
+    <span class="n sans" style="font-weight:700"><button class="lk" data-d="${esc(r.Driver.givenName+' '+r.Driver.familyName)}">${esc(r.Driver.givenName)} ${esc(r.Driver.familyName)}</button><small style="font:400 .9rem Newsreader,serif;color:var(--mute);margin-left:.5rem">${esc(r.Constructor.name)}</small></span>
     <span class="tm">${esc(r.Time?.time||r.status)}</span><span class="g ${cls}" title="Started P${r.grid||'pit lane'}">${txt}</span></div>`}).join('')+
     `<p class="note">Full results: ${race.Results.length} cars started. Only the top ten score points.</p>`;
 }
@@ -187,6 +219,7 @@ async function snap(){try{const r=await fetch('data.json?t='+Date.now(),{cache:'
 const pick=(k,p)=>SNAP&&SNAP[k]?Promise.resolve(SNAP[k]):get(p);
 async function load(){
   SNAP=await snap();
+  if(SNAP&&SNAP.profiles)S.profiles=SNAP.profiles;
   const [sch,ds,cs,last]=await Promise.allSettled([pick('races','/races'),pick('ds','/driverstandings'),pick('cs','/constructorstandings'),pick('last','/last/results')]);
   if(sch.status==='fulfilled'){
     S.races=sch.value.RaceTable.Races;
@@ -202,6 +235,77 @@ async function load(){
   if([sch,ds,cs,last].some(x=>x.status==='fulfilled'))$('#stamp').textContent='Updated '+new Date().toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',second:'2-digit'})+'.';
 }
 for(const [id,v] of [['t-drivers','drivers'],['t-teams','teams']])$('#'+id).onclick=()=>{S.view=v;$('#t-drivers').setAttribute('aria-selected',v==='drivers');$('#t-teams').setAttribute('aria-selected',v==='teams');renderStand()};
+
+/* ---------- F1 car illustration ---------- */
+const carSVG=c=>`<svg viewBox="0 0 300 100" role="img" aria-label="Formula 1 car" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="150" cy="95" rx="134" ry="3.2" fill="#000" opacity=".18"/>
+<rect x="12" y="24" width="36" height="6" rx="2" fill="#12161c"/><rect x="10" y="22" width="4" height="14" rx="1" fill="#2a313a"/><rect x="46" y="22" width="4" height="14" rx="1" fill="#2a313a"/>
+<rect x="33" y="30" width="4" height="44" fill="#2a313a"/>
+<path d="M34 72 L42 55 L72 47 L118 43 L138 35 L158 38 L178 51 L248 60 L290 67 L290 73 L34 73 Z" fill="${c}"/>
+<path d="M54 53 L116 46 L110 52 L58 58 Z" fill="#fff" opacity=".25"/><path d="M84 62 L128 54 L158 60 L158 72 L84 72 Z" fill="#000" opacity=".2"/>
+<rect x="46" y="72" width="214" height="4" rx="2" fill="#12161c"/>
+<path d="M130 43 L130 37 Q146 22 166 39" fill="none" stroke="#12161c" stroke-width="3.2" stroke-linecap="round"/>
+<circle cx="147" cy="37" r="6.5" fill="#eef1f4"/><rect x="141.5" y="35" width="11" height="3" fill="${c}"/>
+<path d="M250 71 L298 71 L298 77 L244 77 Z" fill="#12161c"/><rect x="293" y="62" width="4" height="15" rx="1" fill="#2a313a"/>
+<g transform="translate(70 76)"><circle r="19" fill="#12161c"/><g class="wh"><circle r="10.5" fill="#cfd5da"/><path d="M-10 0H10M0 -10V10M-7 -7L7 7M-7 7L7 -7" stroke="#12161c" stroke-width="1.6"/></g><circle r="3" fill="#12161c"/></g>
+<g transform="translate(244 79)"><circle r="16" fill="#12161c"/><g class="wh"><circle r="9" fill="#cfd5da"/><path d="M-9 0H9M0 -9V9M-6 -6L6 6M-6 6L6 -6" stroke="#12161c" stroke-width="1.5"/></g><circle r="2.6" fill="#12161c"/></g>
+</svg>`;
+
+/* ---------- Scroll widget: a car drives along the bottom as you scroll ---------- */
+$('#car').innerHTML=carSVG('#e10600');
+function onScroll(){
+  const road=$('#road'),car=$('#car'),y=window.scrollY,m=document.documentElement.scrollHeight-window.innerHeight,p=m>0?Math.min(1,y/m):0;
+  road.classList.toggle('on',y>120);
+  car.style.transform=`translateX(${p*(road.clientWidth-car.offsetWidth)}px)`;
+  document.documentElement.style.setProperty('--rot',(y*.9)+'deg');
+}
+let tk=false;
+addEventListener('scroll',()=>{if(!tk){tk=true;requestAnimationFrame(()=>{tk=false;onScroll()})}},{passive:true});
+addEventListener('resize',onScroll);onScroll();
+
+/* ---------- Detail panel (drivers and teams) ---------- */
+const dk=d=>d.givenName+' '+d.familyName;
+const ageOf=b=>{const d=new Date(b+'T00:00:00Z'),n=new Date();let a=n.getUTCFullYear()-d.getUTCFullYear();if(n.getUTCMonth()<d.getUTCMonth()||(n.getUTCMonth()==d.getUTCMonth()&&n.getUTCDate()<d.getUTCDate()))a--;return a};
+const ftin=cm=>{const t=cm/2.54;let f=Math.floor(t/12),i=Math.round(t-f*12);if(i==12){f++;i=0}return f+' ft '+i+' in'};
+const fact=(k,v)=>v?`<div><dt>${k}</dt><dd>${v}</dd></div>`:'';
+const tname=x=>x.Constructors?.[0]?.name||'';
+let lastFocus=null;
+function showPanel(html){
+  const P=$('#panel');
+  if(!P.classList.contains('open'))lastFocus=document.activeElement;
+  $('#pbody').innerHTML=html;P.scrollTop=0;
+  P.classList.add('open');$('#scrim').classList.add('open');P.setAttribute('aria-hidden','false');document.body.classList.add('pop');
+  $('#close').focus();
+}
+function hidePanel(){
+  $('#panel').classList.remove('open');$('#scrim').classList.remove('open');$('#panel').setAttribute('aria-hidden','true');document.body.classList.remove('pop');
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+function driverPanel(key){
+  const x=S.drivers.find(y=>dk(y.Driver)===key);if(!x)return;
+  const d=x.Driver,col='#'+(x.Constructors?.[0]?.colour||'888888'),pr=S.profiles[key]||{},ini=(d.givenName[0]||'')+(d.familyName[0]||'');
+  const born=pr.born?new Date(pr.born+'T00:00:00Z').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric',timeZone:'UTC'}):'';
+  showPanel(`<div class="ph" style="--tc:${esc(col)}"><span class="ini">${esc(ini)}</span>${d.photo?`<img src="${esc(d.photo)}" alt="${esc(key)}" referrerpolicy="no-referrer" onerror="this.remove()">`:''}${d.number?`<span class="num">${esc(d.number)}</span>`:''}</div>
+  <h3>${esc(key)}</h3><p class="tm"><button class="lk" data-t="${esc(tname(x))}">${esc(tname(x))}</button></p>
+  <dl>${fact('Nationality',esc(pr.country))}${fact('Age',pr.born?ageOf(pr.born)+' years':'')}${fact('Born',esc(born))}${fact('Height',pr.height?pr.height+' cm ('+ftin(pr.height)+')':'')}${fact('Car number',esc(d.number))}${fact('Code',esc(d.code))}${fact('Title race','P'+esc(x.position)+' · '+esc(x.points)+' pts')}</dl>
+  ${!pr.born&&!pr.height&&!pr.country?'<p class="note">Personal details are not available for this driver yet.</p>':''}`);
+}
+function teamPanel(key){
+  const t=S.teams.find(y=>y.Constructor.name===key),ds=S.drivers.filter(y=>tname(y)===key);
+  if(!t&&!ds.length)return;
+  const col='#'+((t&&t.Constructor.colour)||(ds[0]&&ds[0].Constructors[0].colour)||'888888');
+  showPanel(`<div class="car" style="--tc:${esc(col)}">${carSVG(col)}</div>
+  <h3>${esc(key)}</h3><p class="tm">Constructor</p>
+  <dl>${t?fact('Title race','P'+esc(t.position)+' · '+esc(t.points)+' pts'):''}${fact('Drivers',ds.map(y=>`<button class="lk" data-d="${esc(dk(y.Driver))}">${esc(dk(y.Driver))}</button>`).join('<br>'))}</dl>
+  <p class="note">A generic F1 car drawn in the team’s colours. It is an illustration, not a photo of the real car.</p>`);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-d],[data-t]');
+  if(b){if(b.dataset.d!==undefined)driverPanel(b.dataset.d);else teamPanel(b.dataset.t);return}
+  if(e.target.id==='scrim'||e.target.closest('#close'))hidePanel();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#panel').classList.contains('open'))hidePanel()});
+
 load();setInterval(load,60000);setInterval(tick,1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 </script>

@@ -19,6 +19,32 @@ async function getJSON(url, tries = 4) {
   throw err;
 }
 
+
+// ---------- Driver profiles from Wikidata (cached in data.json, looked up once per driver) ----------
+const WD = q => getJSON(`https://www.wikidata.org/w/api.php?format=json&${q}`);
+async function profile(given, family) {
+  const isDriver = x => /racing driver|formula one|formula 1|motorsport/i.test(x.description || '');
+  let hit;
+  for (const term of [`${given} ${family}`, family]) {
+    const r = await WD(`action=wbsearchentities&language=en&type=item&limit=8&search=${encodeURIComponent(term)}`);
+    hit = (r.search || []).find(x => isDriver(x) && (term === family ? (x.label || '')[0]?.toLowerCase() === given[0]?.toLowerCase() && (x.label || '').toLowerCase().includes(family.toLowerCase()) : true));
+    await sleep(400);
+    if (hit) break;
+  }
+  if (!hit) return null;
+  const claims = (await WD(`action=wbgetentities&props=claims&ids=${hit.id}`)).entities?.[hit.id]?.claims || {};
+  await sleep(400);
+  const val = p => claims[p]?.[0]?.mainsnak?.datavalue?.value;
+  const born = val('P569')?.time?.slice(1, 11) || null;
+  const h = val('P2048');
+  let height = null;
+  if (h) { const a = parseFloat(h.amount); height = /Q174728/.test(h.unit) ? a : /Q11573/.test(h.unit) ? a * 100 : null; if (height) height = Math.round(height); }
+  let country = null;
+  const cid = val('P27')?.id;
+  if (cid) { country = (await WD(`action=wbgetentities&props=labels&languages=en&ids=${cid}`)).entities?.[cid]?.labels?.en?.value || null; await sleep(400); }
+  return { born, height, country };
+}
+
 // ---------- OpenF1 (mapped into the shape the page reads) ----------
 const iso = s => new Date(s).toISOString();
 const dt = s => ({ date: iso(s).slice(0, 10), time: iso(s).slice(11, 19) + 'Z' });
@@ -80,22 +106,39 @@ async function openf1() {
   if (!grid.length && lastRace._qualiKey) grid = await g(`/session_result?session_key=${lastRace._qualiKey}`); // qualifying order as a stand-in
 
   const dv = Object.fromEntries(drivers.map(d => [d.driver_number, d]));
-  const nameOf = n => ({ givenName: dv[n]?.first_name || '', familyName: dv[n]?.last_name || `#${n}` });
+  const nameOf = n => ({
+    givenName: dv[n]?.first_name || '', familyName: dv[n]?.last_name || `#${n}`,
+    code: dv[n]?.name_acronym, number: dv[n]?.driver_number, photo: dv[n]?.headshot_url,
+  });
+  const colourOf = t => Object.values(dv).find(d => d.team_name === t)?.team_colour;
   const teamOf = n => dv[n]?.team_name || '';
 
   out.ds.StandingsTable.StandingsLists = [{
     round: stRound,
     DriverStandings: cd.slice().sort((a, b) => a.position_current - b.position_current).map(r => ({
       position: String(r.position_current), points: String(r.points_current),
-      Driver: nameOf(r.driver_number), Constructors: [{ name: teamOf(r.driver_number) }],
+      Driver: nameOf(r.driver_number), Constructors: [{ name: teamOf(r.driver_number), colour: colourOf(teamOf(r.driver_number)) }],
     })),
   }];
   out.cs.StandingsTable.StandingsLists = [{
     round: stRound,
     ConstructorStandings: ct.slice().sort((a, b) => a.position_current - b.position_current).map(r => ({
-      position: String(r.position_current), points: String(r.points_current), Constructor: { name: r.team_name },
+      position: String(r.position_current), points: String(r.points_current), Constructor: { name: r.team_name, colour: colourOf(r.team_name) },
     })),
   }];
+
+  // Driver profiles: reuse what is already in data.json, look up only new drivers (max 30 per run)
+  let old = {};
+  try { old = JSON.parse(readFileSync('data.json', 'utf8')).profiles || {}; } catch {}
+  out.profiles = { ...old };
+  let budget = 30;
+  for (const r of out.ds.StandingsTable.StandingsLists[0].DriverStandings) {
+    const key = `${r.Driver.givenName} ${r.Driver.familyName}`;
+    if (key in out.profiles || budget <= 0) continue;
+    budget--;
+    try { out.profiles[key] = (await profile(r.Driver.givenName, r.Driver.familyName)) || {}; }
+    catch (e) { console.warn('Profile lookup failed for', key, '-', e.message); }
+  }
 
   const gridOf = Object.fromEntries(grid.map(x => [x.driver_number, x.position]));
   const sorted = res.slice().sort((a, b) => (a.position ?? 99) - (b.position ?? 99));

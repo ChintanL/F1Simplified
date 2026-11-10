@@ -28,12 +28,13 @@ h2{font-size:1.5rem;font-weight:800;font-stretch:90%;margin:3rem 0 .4rem}
 .count{display:flex;gap:1.2rem;font-family:Archivo,sans-serif;font-variant-numeric:tabular-nums;margin-bottom:1.2rem}
 .count b{display:block;font-size:2.4rem;font-weight:800;font-stretch:80%;line-height:1}
 .count span{font-size:.8rem;color:var(--mute)}
-.sess{display:grid;grid-template-columns:7.5rem 1fr;gap:.2rem 1rem;border-top:1px solid var(--line);padding:.6rem 0;font-size:.98rem}
+.sess{display:grid;grid-template-columns:minmax(9rem,11.5rem) 1fr;gap:.2rem 1rem;border-top:1px solid var(--line);padding:.6rem 0;font-size:.98rem}
 .sess .t{font-family:Archivo,sans-serif;font-weight:600;font-size:.9rem;color:var(--mute)}
 .sess strong{font-family:Archivo,sans-serif;font-weight:700}
 .sess.race strong{color:var(--red)}
 .tabs{display:flex;gap:.4rem;margin:.6rem 0 1rem}
 .tabs button{font:600 .95rem Archivo,sans-serif;padding:.5rem 1rem;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;cursor:pointer}
+.more{font:600 .95rem Archivo,sans-serif;padding:.5rem 1rem;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;cursor:pointer;margin-top:1rem}
 .tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 button:focus-visible,summary:focus-visible{outline:3px solid var(--red);outline-offset:2px}
 .say{border-left:4px solid var(--red);padding:.2rem 0 .2rem 1rem;margin:0 0 1.2rem;max-width:38rem}
@@ -111,10 +112,18 @@ footer a{color:inherit}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const get=async()=>{throw new Error('data.json not found yet')};
-const S={view:'drivers',races:[],drivers:[],teams:[],round:0,nextRace:null};
+const S={all:{drivers:false,teams:false},view:'drivers',races:[],drivers:[],teams:[],round:0,nextRace:null};
 const SESS=[['FirstPractice','Practice 1','Teams test the car and tyres.'],['SecondPractice','Practice 2','More testing, usually a race-pace run.'],['ThirdPractice','Practice 3','Final tune-up before qualifying.'],['SprintQualifying','Sprint qualifying','Sets the grid for the short sprint race.'],['SprintShootout','Sprint qualifying','Sets the grid for the short sprint race.'],['Sprint','Sprint race','A short race (about 100 km). Top 8 score points.'],['Qualifying','Qualifying','Fastest lap wins pole, the best starting spot.']];
 const when=(d,t)=>new Date(d+'T'+(t||'12:00:00Z'));
-const fmt=dt=>dt.toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+const fmt=dt=>dt.toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+const TZ=(Intl.DateTimeFormat().resolvedOptions().timeZone||'your local time zone').replace(/_/g,' ');
+const US={'Las Vegas':'Nevada','Miami':'Florida','Miami Gardens':'Florida','Austin':'Texas'};
+function place(c,short){
+  const L=c.Location,us=/united states|usa/i.test(L.country),reg=us?US[L.locality]||'':'';
+  const a=short?[c.circuitName,reg,L.country]:[c.circuitName,L.locality,reg,L.country];
+  const seen=new Set();
+  return a.filter(x=>x&&!seen.has(x.toLowerCase())&&seen.add(x.toLowerCase())).join(', ');
+}
 
 function renderNext(){
   const el=$('#next'),r=S.nextRace;
@@ -124,9 +133,10 @@ function renderNext(){
   rows.sort((a,b)=>a.t-b.t);
   el.innerHTML=`<p class="where sans" style="margin:0 0 .3rem">Next up · Round ${esc(r.round)}</p>
   <h3 class="name">${esc(r.raceName)}</h3>
-  <p class="where">${esc(r.Circuit.circuitName)}, ${esc(r.Circuit.Location.locality)}, ${esc(r.Circuit.Location.country)}</p>
+  <p class="where">${esc(place(r.Circuit))}</p>
   <div class="count" id="count" aria-label="Time until the race"></div>
-  ${rows.map(x=>`<div class="sess${x.race?' race':''}"><span class="t">${fmt(x.t)}</span><span><strong>${esc(x.k)}.</strong> ${esc(x.d)}</span></div>`).join('')}`;
+  ${rows.map(x=>`<div class="sess${x.race?' race':''}"><span class="t">${fmt(x.t)}</span><span><strong>${esc(x.k)}.</strong> ${esc(x.d)}</span></div>`).join('')}
+  <p class="note">All times are shown in your device’s time zone: ${esc(TZ)}.</p>`;
   tick();
 }
 function tick(){
@@ -148,18 +158,22 @@ function renderStand(){
   const nm=x=>isD?x.Driver.givenName+' '+x.Driver.familyName:x.Constructor.name;
   let say=`<strong>${esc(nm(L[0]))}</strong> leads${L[1]?` by ${gap} point${gap==1?'':'s'} over ${esc(nm(L[1]))}`:''}. `;
   say+=left===0?'The season is over, so this is the final result.':alive===1?'Nobody else can catch them now, the title is decided.':`With ${left} points still on offer, ${alive} ${isD?'drivers':'teams'} can still win the title.`;
-  el.innerHTML=`<p class="say">${say}</p>`+L.map((x,i)=>{
+  const full=S.all[S.view],shown=full?L:L.slice(0,10);
+  el.innerHTML=`<p class="say">${say}</p>`+shown.map((x,i)=>{
     const pts=+x.points,g=top-pts,out=pts+left<top;
     return `<div class="row${i==0?' lead':''}${out?' out':''}"><span class="p">${esc(x.position)}</span>
     <span class="n">${esc(nm(x))}${isD?`<small>${esc(x.Constructors?.[0]?.name||'')}</small>`:''}</span>
     <span class="pts">${pts}<small>${i==0?'leader':'−'+g}</small></span>
     <span class="bar"><i style="width:${top?pts/top*100:0}%"></i></span></div>`}).join('')+
+    (L.length>10?`<button class="more" id="more">${full?'Show top 10 only':'Show all '+L.length}</button>`:'')+
     `<p class="note">Faded rows can no longer win the title, even with a perfect finish to the season.</p>`;
+  const mb=$('#more');if(mb)mb.onclick=()=>{S.all[S.view]=!S.all[S.view];renderStand()};
 }
 function renderLast(race){
   const sub=$('#lastsub'),el=$('#last');
   if(!race){sub.textContent='No races have been run yet this season.';el.innerHTML='';return}
-  sub.textContent=`${race.raceName}, round ${race.round}. Green means gained places from the start, red means lost.`;
+  const rc=S.races.find(x=>x.round===race.round),loc=rc?place(rc.Circuit,true):'';
+  sub.textContent=`${race.raceName}${loc?` (${loc})`:''}, round ${race.round}. Green means gained places from the start, red means lost.`;
   el.innerHTML=race.Results.slice(0,10).map(r=>{
     const grid=+r.grid||20,pos=+r.position,d=grid-pos;
     const cls=d>0?'up':d<0?'down':'flat',txt=d>0?'▲'+d:d<0?'▼'+(-d):'–';
